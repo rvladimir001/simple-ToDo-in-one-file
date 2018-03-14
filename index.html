@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://use.fontawesome.com/550a8dd594.js"></script>
+    <title>ToDoList</title>
+</head>
+<body>
+    <div class="chapter">
+        <table class="list">
+            <tr>
+                <th><input id="all" type="checkbox"></th>
+                <th><input class="nameTask" type="text" placeholder="Новая задача..."><i class="fa fa-plus-square" aria-hidden="true"></i></th>
+                <th class="del"></th></th>
+            </tr>
+            <tfoot>
+                <tr>
+                    <td><span class="iteml">Осталось: </span><span id="count"></span></td>
+                    <td><button class="allTask">Все</button><button class="activeTask">Активные</button><button class="completedTask">Выполненные</button></td>
+                    <td><button class="delCompleted">Удалить выполненные</button></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="exp">
+            <button class="But">Экспорт в объект<i class="fa fa-file-o" aria-hidden="true"></i></button>
+        </div>
+        <div>
+            
+        </div>
+    </div>
+</body>
+</html>
+<script>
+$(document).ready(function () {
+    //добавление новой задачи
+    $("body").on("click", ".fa-plus-square", function(){
+        var task = $(".nameTask").val().trim();
+        if(task!="") {
+            $(".list").append("<tr class='str'><td><input type='checkbox'></td><td>"+task+"</td><td><i class='fa fa-trash' aria-hidden='true'></i><i class='fa fa-pencil' aria-hidden='true'></i><i class='fa fa-floppy-o' aria-hidden='true'></i></td></tr>");
+            $(".nameTask").val("");
+            $("input").removeAttr('style', 'border: 1px solid red;');
+        } else {
+            $("input").attr('style', 'border: 1px solid red;');
+        }
+        countTask();
+        });
+
+    //удаление задачи
+    $("body").on("click", ".fa-trash", function(){
+        $(this).parents(".str").remove();
+        countTask();
+    });
+
+    //редактирование задачи
+    $("body").on("click", ".fa-pencil", function(){
+        var taskText = $(this).parents(".str").children().eq(1).text();
+        $(this).parents(".str").children().eq(1).text("").append("<input type='text'>");
+        $(this).parents(".str").find("input").val(taskText);
+        $(".fa-trash, .fa-pencil").hide();
+        $(this).next(".fa-floppy-o").show();
+    });
+    $("body").on("click", ".fa-floppy-o", function(){
+        var newTaskText = $(this).parents(".str").children().eq(1).children().val();
+        $(this).parents(".str").children().eq(1).find("input").remove();
+        $(this).parents(".str").children().eq(1).text(newTaskText);
+        $(".fa-trash, .fa-pencil").show();
+        $(this).hide();
+    });
+
+    //статус задачи
+    $("body").on("change", ".str input[type=checkbox]", function(){
+        countTask();
+        if(this.checked) {
+            $(this).parents(".str").addClass("completed");
+            $(this).parents(".str").find(".fa-pencil").hide();
+        } else {
+            $(this).parents(".str").removeClass("completed");
+            $(this).parents(".str").find(".fa-pencil").show();
+        }
+        var arrCheck = [];
+        $(".str input[type=checkbox]").each( function(){
+            var status = $(this).is(':checked');
+            arrCheck.push(status);    
+        });
+        if(arrCheck.indexOf(false)>-1) {
+            $("#all").prop("checked", false);
+        } else {
+            $("#all").prop("checked", true);
+        }        
+    });
+
+    //cтатус всех задач
+    $("#all").change(function(){
+        if(this.checked) {
+            $(".str input[type=checkbox]").prop("checked", true);
+            $(".str input[type=checkbox]").parents(".str").addClass("completed");
+            $(".str input[type=checkbox]").parents(".str").find(".fa-pencil").hide();
+        } else {
+            $(".str input[type=checkbox]").prop("checked", false);
+            $(".str input[type=checkbox]").parents(".str").removeClass("completed");
+            $(".str input[type=checkbox]").parents(".str").find(".fa-pencil").show();
+        }
+        countTask();
+    });
+     
+    //фильтры
+    $("body").on("click", ".allTask", function(){
+        $("tr.str").show();
+    });
+
+    $("body").on("click", ".activeTask", function(){
+        $("tr.str").show();
+        $("tr.completed").hide();
+    });
+    $("body").on("click", ".completedTask", function(){
+        $("tr.str").hide();
+        $("tr.completed").show();
+    });
+    //удаление всех выполненных
+    $("body").on("click", ".delCompleted", function(){
+        $("tr.completed").remove();
+    });
+    //экспорт в объект
+    $("body").on("click", ".But", function(){
+        var objTask = {};
+        $("tr.str").each(function(){
+            var key = $(this).children().eq(1).text();
+            var val = $(this).children().eq(0).children().is(":checked") ? 'Выполнено' : 'Не выполнено';
+            objTask[key] = val;
+         });
+         console.log(objTask);
+    });
+});
+
+function countTask(){
+    var arrChecked = [];
+    $(".str input[type=checkbox]").each( function(){
+        var x = $(this).is(':checked');
+        arrChecked.push(x); 
+    });
+    var count = 0;
+    for(var i=0;i<arrChecked.length;i++) {
+        if(arrChecked[i]==false){
+            count=count+1;
+        }
+    }
+    $("#count").text(count);
+}
+</script>
+<style>
+body {
+    font-size: 18px;
+    font-family: 'Times New Roman', Times, serif;
+}
+table {
+    margin: 20px auto;
+    width: 50%;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+table.list tr:not(:last-child) {
+    border-bottom: 1px solid #c2c2c2;
+}
+table.list td, table.list th {
+    padding: 10px;
+    text-align: left;
+}
+table.list td:last-child {
+    width: 170px;
+}
+table.list td:first-child {
+    min-width: 70px;
+}
+table input {
+    width: 80%
+}
+.add {
+    border-radius: 50%;
+    border: none;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+}
+.fa {
+    cursor: pointer;
+    padding: 5px;
+}
+.fa:hover {
+    color: #B1CC90;
+}
+.fa:active {
+    color: #CF7F97;
+}
+
+.completed {
+    text-decoration: line-through;
+    opacity: 0.4;
+}
+button {
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+}
+table.list td.del, table.list td.red {
+    width: 40px;
+}
+.fa-floppy-o {
+    display: none;
+}
+.exp {
+    text-align: center;
+    margin-top: 40px;
+}
+button.But {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 15px 25px;
+  margin: 0 26px;
+  border-radius: 2px;
+  font-size: 22px;
+  box-shadow: -20px 2px 26px rgba(34, 210, 16, 0.77), 3px 12px 26px rgba(255, 13, 13, 0.8), 12px 3px 26px rgba(13, 24, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+  text-shadow: 1px 1px 1px rgba(0, 225, 252, 0.8), 2px 2px 2px rgba(252, 0, 71, 0.8);
+  font-weight: bold;
+  filter: blur(.7px);
+  transition: .5s;
+}
+button.But:hover{
+  cursor: pointer;
+  box-shadow: -20px 2px 46px rgba(34, 210, 16, 0.77), 3px 12px 46px rgba(255, 13, 13, 0.8), 12px 3px 46px rgba(13, 24, 255, 0.8);
+}
+.iteml, #count {
+    font-size: 14px;
+}
+.allTask:hover , .activeTask:hover , .completedTask:hover, .delCompleted:hover {
+    background-color: #DAD7DB;
+}
+tfoot {
+    background-color: #FCF4FF;
+}
+</style>
